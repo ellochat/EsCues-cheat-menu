@@ -80,7 +80,7 @@ MainTab:CreateButton({
     end
 })
 
--- Infinite Jump (with disconnect on toggle off)
+-- Infinite Jump Toggle (with disconnect on toggle off)
 local infJumpConnection = nil
 
 MainTab:CreateToggle({
@@ -88,8 +88,7 @@ MainTab:CreateToggle({
     CurrentValue = false,
     Flag = "InfJump",
     Callback = function(Value)
-        if Value = true then
-            -- Enable Infinite Jump
+        if Value == true then
             local player = game.Players.LocalPlayer
             local character = player.Character or player.CharacterAdded:Wait()
             local humanoid = character:WaitForChild("Humanoid")
@@ -103,33 +102,43 @@ MainTab:CreateToggle({
                     canJump = false
                     task.wait(jumpCooldown)
                     canJump = true
-                        end
+                end
             end)
         else
-            -- Disable Infinite Jump
             if infJumpConnection then
                 infJumpConnection:Disconnect()
                 infJumpConnection = nil
             end
         end
-        elseif Value = false then
-            return
-        end
     end
 })
-local Toggle = MainTab:CreateToggle({
-   Name = "Invincibility",
-   CurrentValue = false,
-   Flag = "godmode", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-   Callback = function(Value)
-   if Value = true then
-while true do
-                    local humanoid = player:WaitForChild("Humanoid")
-                    humanoid:TakeDamage(-999)
+
+-- Invincibility Toggle (Godmode)
+local godmodeRunning = false
+local godmodeThread = nil
+
+MainTab:CreateToggle({
+    Name = "Invincibility",
+    CurrentValue = false,
+    Flag = "godmode",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+
+        if Value == true then
+            godmodeRunning = true
+            godmodeThread = task.spawn(function()
+                while godmodeRunning do
+                    local character = player.Character
+                    if character and character:FindFirstChild("Humanoid") then
+                        local humanoid = character.Humanoid
+                        -- Heal or prevent death
+                        humanoid.Health = humanoid.MaxHealth
+                    end
+                    task.wait(0.5) -- Adjust as needed
                 end
-            elseif Value = false then
-                return
-            end
-            end
-   end,
+            end)
+        else
+            godmodeRunning = false
+        end
+    end
 })
