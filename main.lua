@@ -88,7 +88,7 @@ MainTab:CreateToggle({
     CurrentValue = false,
     Flag = "InfJump",
     Callback = function(Value)
-        if Value then
+        if Value = true then
             -- Enable Infinite Jump
             local player = game.Players.LocalPlayer
             local character = player.Character or player.CharacterAdded:Wait()
@@ -112,5 +112,24 @@ MainTab:CreateToggle({
                 infJumpConnection = nil
             end
         end
+        elseif Value = false then
+            return
+        end
     end
+})
+local Toggle = MainTab:CreateToggle({
+   Name = "Invincibility",
+   CurrentValue = false,
+   Flag = "godmode", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+   if Value = true then
+while true do
+                    local humanoid = player:WaitForChild("Humanoid")
+                    humanoid:TakeDamage(-999)
+                end
+            elseif Value = false then
+                return
+            end
+            end
+   end,
 })
