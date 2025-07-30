@@ -88,7 +88,7 @@ MainTab:CreateToggle({
     CurrentValue = false,
     Flag = "InfJump",
     Callback = function(Value)
-        if Value then
+        if Value == true then
             -- Enable Infinite Jump
             local player = game.Players.LocalPlayer
             local character = player.Character or player.CharacterAdded:Wait()
@@ -103,6 +103,10 @@ MainTab:CreateToggle({
                     canJump = false
                     task.wait(jumpCooldown)
                     canJump = true
+                        end
+                    elseif Value == false then
+                        return
+                    end
                 end
             end)
         else
