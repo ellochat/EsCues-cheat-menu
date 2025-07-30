@@ -1,4 +1,4 @@
--- Load Rayfield UI safely
+-- Safely load Rayfield
 local success, RayfieldLib = pcall(function()
     return loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 end)
@@ -8,7 +8,7 @@ if not success then
     return
 end
 
--- Create main window
+-- Create UI window
 local Window = RayfieldLib:CreateWindow({
     Name = "EsCue's Universal Cheat Menu",
     Icon = 0,
@@ -33,8 +33,8 @@ local Window = RayfieldLib:CreateWindow({
     KeySystem = true,
     KeySettings = {
         Title = "EsCue's Key System",
-        Subtitle = "(its ez)",
-        Note = "Join the Discord! Link in the key tab: https://discord.gg/JkUXvaYwvQ",
+        Subtitle = "(it's ez)",
+        Note = "Join the Discord: https://discord.gg/JkUXvaYwvQ",
         FileName = "EsCueKey",
         SaveKey = true,
         GrabKeyFromSite = true,
@@ -42,11 +42,11 @@ local Window = RayfieldLib:CreateWindow({
     }
 })
 
--- Tabs and Sections
+-- Create tab and section
 local MainTab = Window:CreateTab("Main Tab", 10511856020)
 local InfoSection = MainTab:CreateSection("Info!")
 
--- Notify when script loads
+-- Notify execution
 RayfieldLib:Notify({
     Title = "Executed!",
     Content = "Script executed successfully!",
@@ -69,7 +69,7 @@ MainTab:CreateSlider({
     end
 })
 
--- WalkSpeed Reset Button
+-- Reset WalkSpeed Button
 MainTab:CreateButton({
     Name = "Reset WalkSpeed",
     Callback = function()
@@ -80,7 +80,7 @@ MainTab:CreateButton({
     end
 })
 
--- Infinite Jump Toggle (Safe version with disconnect)
+-- Infinite Jump (with disconnect on toggle off)
 local infJumpConnection = nil
 
 MainTab:CreateToggle({
@@ -89,6 +89,7 @@ MainTab:CreateToggle({
     Flag = "InfJump",
     Callback = function(Value)
         if Value then
+            -- Enable Infinite Jump
             local player = game.Players.LocalPlayer
             local character = player.Character or player.CharacterAdded:Wait()
             local humanoid = character:WaitForChild("Humanoid")
@@ -96,17 +97,16 @@ MainTab:CreateToggle({
             local canJump = true
             local jumpCooldown = 0.1
 
-            local function onJumpRequest()
+            infJumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
                 if canJump then
                     humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                     canJump = false
                     task.wait(jumpCooldown)
                     canJump = true
                 end
-            end
-
-            infJumpConnection = game:GetService("UserInputService").JumpRequest:Connect(onJumpRequest)
+            end)
         else
+            -- Disable Infinite Jump
             if infJumpConnection then
                 infJumpConnection:Disconnect()
                 infJumpConnection = nil
