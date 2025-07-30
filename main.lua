@@ -104,9 +104,6 @@ MainTab:CreateToggle({
                     task.wait(jumpCooldown)
                     canJump = true
                         end
-                    elseif Value == false then
-                        return
-                end
             end)
         else
             -- Disable Infinite Jump
