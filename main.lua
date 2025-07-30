@@ -15,7 +15,7 @@ local Window = RayfieldLib:CreateWindow({
     LoadingTitle = "Entering the cheat menu!",
     LoadingSubtitle = "by @EscueGT on YouTube",
     ShowText = "Rayfield",
-    Theme = "Default",
+    Theme = "Serenity",
     ToggleUIKeybind = "K",
 
     ConfigurationSaving = {
