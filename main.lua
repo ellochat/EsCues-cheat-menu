@@ -15,7 +15,7 @@ local Window = RayfieldLib:CreateWindow({
     LoadingTitle = "Entering the cheat menu!",
     LoadingSubtitle = "by @EscueGT on YouTube",
     ShowText = "Rayfield",
-    Theme = "Serenity",
+    Theme = "AmberGlow",
     ToggleUIKeybind = "K",
 
     ConfigurationSaving = {
@@ -141,4 +141,31 @@ MainTab:CreateToggle({
             godmodeRunning = false
         end
     end
+})
+local TrollTab = MainWindow:CreateTab("Trolls", nil) -- Title, Image
+local SoundInput = TrollTab:CreateInput({
+   Name = "Sound ID",
+   CurrentValue = "",
+   PlaceholderText = "i forgot just type here ig",
+   RemoveTextAfterFocusLost = false,
+   Flag = "SountInput",
+   Callback = function(Text)
+   local sound = instance.New("Sound")
+            sound.SoundId = "rbxassetid://", Text
+            sound.Parent = game.Workspace
+   end,
+})
+local SoundButton = TrollTab:CreateButton({
+   Name = "Play Sound",
+   Callback = function()
+   sound:Play()
+   end,
+})
+local StopButton = TrollTab:CreateButton({
+   Name = "Button Example",
+   Callback = function()
+   if sound:IsPlaying = true then
+                sound:Stop()
+            end
+   end,
 })
