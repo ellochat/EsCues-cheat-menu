@@ -142,30 +142,50 @@ MainTab:CreateToggle({
         end
     end
 })
-local TrollTab = MainWindow:CreateTab("Trolls", nil) -- Title, Image
+local TrollTab = Window:CreateTab("Trolls", nil)
+
+-- Shared sound variable
+local sound
+
 local SoundInput = TrollTab:CreateInput({
-   Name = "Sound ID",
-   CurrentValue = "",
-   PlaceholderText = "i forgot just type here ig",
-   RemoveTextAfterFocusLost = false,
-   Flag = "SountInput",
-   Callback = function(Text)
-   local sound = instance.New("Sound")
-            sound.SoundId = "rbxassetid://", Text
-            sound.Parent = game.Workspace
-   end,
+    Name = "Sound ID",
+    CurrentValue = "",
+    PlaceholderText = "Enter a Sound ID",
+    RemoveTextAfterFocusLost = false,
+    Flag = "SoundInput",
+    Callback = function(Text)
+        if sound then
+            sound:Destroy()
+        end
+
+        sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://" .. Text
+        sound.Volume = 5
+        sound.Looped = false
+        sound.Parent = workspace
+    end,
 })
+
 local SoundButton = TrollTab:CreateButton({
-   Name = "Play Sound",
-   Callback = function()
-   sound:Play()
-   end,
+    Name = "Play Sound",
+    Callback = function()
+        if sound then
+            sound:Play()
+        else
+            RayfieldLib:Notify({
+                Title = "Error",
+                Content = "No sound loaded.",
+                Duration = 4
+            })
+        end
+    end,
 })
+
 local StopButton = TrollTab:CreateButton({
-   Name = "Button Example",
-   Callback = function()
-   if sound:IsPlaying = true then
-                sound:Stop()
-            end
-   end,
+    Name = "Stop Sound",
+    Callback = function()
+        if sound and sound.IsPlaying then
+            sound:Stop()
+        end
+    end,
 })
