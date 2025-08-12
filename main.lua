@@ -3,7 +3,7 @@ local success, RayfieldLib = pcall(function()
     return loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 end)
 
-if not success then
+if not success or not RayfieldLib then
     warn("Failed to load Rayfield library.")
     return
 end
@@ -44,7 +44,7 @@ local Window = RayfieldLib:CreateWindow({
 
 -- Create tab and section
 local MainTab = Window:CreateTab("Main Tab", 10511856020)
-local InfoSection = MainTab:CreateSection("i forgot what to put here")
+MainTab:CreateSection("Main Features")
 
 -- Notify execution
 RayfieldLib:Notify({
@@ -54,7 +54,7 @@ RayfieldLib:Notify({
 })
 
 -- WalkSpeed Slider
-MainTab:CreateSlider({
+local WalkSpeedSlider = MainTab:CreateSlider({
     Name = "WalkSpeed",
     Range = {0, 300},
     Increment = 1,
@@ -77,33 +77,24 @@ MainTab:CreateButton({
         if player and player.Character and player.Character:FindFirstChild("Humanoid") then
             player.Character.Humanoid.WalkSpeed = 16
         end
+        WalkSpeedSlider:Set(16)
     end
-        WalkSpeedSlider:Set(16) -- The new slider integer value
 })
 
--- Infinite Jump Toggle (with disconnect on toggle off)
+-- Infinite Jump Toggle
 local infJumpConnection = nil
-
 MainTab:CreateToggle({
     Name = "Infinite Jump",
     CurrentValue = false,
     Flag = "InfJump",
     Callback = function(Value)
-        if Value == true then
-            local player = game.Players.LocalPlayer
-            local character = player.Character or player.CharacterAdded:Wait()
-            local humanoid = character:WaitForChild("Humanoid")
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
 
-            local canJump = true
-            local jumpCooldown = 0.1
-
+        if Value then
             infJumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
-                if canJump then
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                    canJump = false
-                    task.wait(jumpCooldown)
-                    canJump = true
-                end
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
             end)
         else
             if infJumpConnection then
@@ -114,10 +105,8 @@ MainTab:CreateToggle({
     end
 })
 
--- Invincibility Toggle (Godmode)
+-- Invincibility Toggle
 local godmodeRunning = false
-local godmodeThread = nil
-
 MainTab:CreateToggle({
     Name = "Invincibility",
     CurrentValue = false,
@@ -125,17 +114,14 @@ MainTab:CreateToggle({
     Callback = function(Value)
         local player = game.Players.LocalPlayer
 
-        if Value == true then
+        if Value then
             godmodeRunning = true
-            godmodeThread = task.spawn(function()
+            task.spawn(function()
                 while godmodeRunning do
-                    local character = player.Character
-                    if character and character:FindFirstChild("Humanoid") then
-                        local humanoid = character.Humanoid
-                        -- Heal or prevent death
-                        humanoid.Health = humanoid.MaxHealth
+                    if player.Character and player.Character:FindFirstChild("Humanoid") then
+                        player.Character.Humanoid.Health = player.Character.Humanoid.MaxHealth
                     end
-                    task.wait(0.5) -- Adjust as needed
+                    task.wait(0.5)
                 end
             end)
         else
@@ -143,12 +129,13 @@ MainTab:CreateToggle({
         end
     end
 })
+
+-- Troll Tab
 local TrollTab = Window:CreateTab("Trolls", nil)
 
 -- Shared sound variable
 local sound
-
-local SoundInput = TrollTab:CreateInput({
+TrollTab:CreateInput({
     Name = "Sound ID",
     CurrentValue = "",
     PlaceholderText = "Enter a Sound ID",
@@ -158,16 +145,14 @@ local SoundInput = TrollTab:CreateInput({
         if sound then
             sound:Destroy()
         end
-
         sound = Instance.new("Sound")
         sound.SoundId = "rbxassetid://" .. Text
         sound.Volume = 5
-        sound.Looped = false
         sound.Parent = workspace
-    end,
+    end
 })
 
-local SoundButton = TrollTab:CreateButton({
+TrollTab:CreateButton({
     Name = "Play Sound",
     Callback = function()
         if sound then
@@ -179,57 +164,71 @@ local SoundButton = TrollTab:CreateButton({
                 Duration = 4
             })
         end
-    end,
+    end
 })
 
-local StopButton = TrollTab:CreateButton({
+TrollTab:CreateButton({
     Name = "Stop Sound",
     Callback = function()
         if sound and sound.IsPlaying then
             sound:Stop()
         end
-    end,
-})
-local JerkR15Button = TrollTab:CreateButton({
-   Name = "jerk it for r15",
-   Callback = function()
-   loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
-   end,
-})
-local JerkR6Button = TrollTab:CreateButton({
-   Name = "jerk it for r6",
-   Callback = function()
-   loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
-   end,
-})
-local killall = TrollTab:CreateButton({
-   Name = "Kill All",
-   Callback = function()
-local Players = game:GetService("Players")
-
-for _, player in ipairs(Players:GetPlayers()) do
-    if player.Character and player.Character:FindFirstChild("Humanoid") then
-        player.Character.Humanoid.Health = 0
     end
-end
+})
 
-   end,
+-- Pre-made scripts
+TrollTab:CreateButton({
+    Name = "jerk it for r15",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
+    end
 })
-local UserInput = TrollTab:CreateInput({
-   Name = "Username",
-   CurrentValue = "",
-   PlaceholderText = "Input Placeholder",
-   RemoveTextAfterFocusLost = false,
-   Flag = "Input1",
-   Callback = function(User)
-   -- The function that takes place when the input is changed
-   -- The variable (Text) is a string for the value in the text box
-   end,
+
+TrollTab:CreateButton({
+    Name = "jerk it for r6",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
+    end
 })
-local killSpecificButton = TrollTab:CreateButton({
-   Name = "Button Example",
-   Callback = function()
-   local person = game.workspace:FindFirstChild(User)
-            person.humanoid.Health = 0
-   end,
+
+-- Kill All button
+TrollTab:CreateButton({
+    Name = "Kill All",
+    Callback = function()
+        local Players = game:GetService("Players")
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                plr.Character.Humanoid.Health = 0
+            end
+        end
+    end
+})
+
+-- Kill specific player
+local targetUsername = ""
+TrollTab:CreateInput({
+    Name = "Username",
+    CurrentValue = "",
+    PlaceholderText = "Enter a username",
+    RemoveTextAfterFocusLost = false,
+    Flag = "Input1",
+    Callback = function(User)
+        targetUsername = User
+    end
+})
+
+TrollTab:CreateButton({
+    Name = "Kill Player",
+    Callback = function()
+        local targetPlayer = game.Players:FindFirstChild(targetUsername)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+            targetPlayer.Character.Humanoid.Health = 0
+        else
+            RayfieldLib:Notify({
+                Title = "Error",
+                Content = "Player not found or no Humanoid.",
+                Duration = 4
+            })
+        end
+    end
 })
