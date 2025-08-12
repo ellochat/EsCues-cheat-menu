@@ -232,3 +232,62 @@ TrollTab:CreateButton({
         end
     end
 })
+local player = game.Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local RS = game:GetService("RunService")
+local speed = 50
+
+local bv, bg
+
+local function startFlying()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local root = character:WaitForChild("HumanoidRootPart")
+
+    bv = Instance.new("BodyVelocity")
+    bv.Name = "FlyVelocity"
+    bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+    bv.Velocity = Vector3.zero
+    bv.Parent = root
+
+    bg = Instance.new("BodyGyro")
+    bg.Name = "FlyGyro"
+    bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+    bg.CFrame = root.CFrame
+    bg.Parent = root
+
+    RS:BindToRenderStep("FlyMovement", Enum.RenderPriority.Character.Value, function()
+        if not player.Character then return end
+        local root = player.Character:FindFirstChild("HumanoidRootPart")
+        if not root or not bv or not bg then return end
+
+        local moveDirection = Vector3.new()
+        if UIS:IsKeyDown(Enum.KeyCode.W) then moveDirection += workspace.CurrentCamera.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then moveDirection -= workspace.CurrentCamera.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then moveDirection -= workspace.CurrentCamera.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then moveDirection += workspace.CurrentCamera.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDirection += Vector3.new(0,1,0) end
+        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then moveDirection -= Vector3.new(0,1,0) end
+
+        bv.Velocity = moveDirection * speed
+        bg.CFrame = workspace.CurrentCamera.CFrame
+    end)
+end
+
+local function stopFlying()
+    RS:UnbindFromRenderStep("FlyMovement")
+    if bv then bv:Destroy() bv = nil end
+    if bg then bg:Destroy() bg = nil end
+end
+
+local FlyToggle = MainTab:CreateToggle({
+   Name = "Fly",
+   CurrentValue = false,
+   Flag = "ToggleFly",
+   Callback = function(Value)
+       if Value then
+           startFlying()
+       else
+           stopFlying()
+       end
+   end,
+})
