@@ -56,7 +56,7 @@ RayfieldLib:Notify({
 -- WalkSpeed Slider
 local WalkSpeedSlider = MainTab:CreateSlider({
     Name = "WalkSpeed",
-    Range = {0, 300},
+    Range = {0, 500},
     Increment = 1,
     Suffix = "walk 👍",
     CurrentValue = 16,
@@ -235,7 +235,7 @@ TrollTab:CreateButton({
 local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
-local speed = 50
+local speed = FlySpeed
 
 local bv, bg
 
@@ -289,5 +289,16 @@ local FlyToggle = MainTab:CreateToggle({
        else
            stopFlying()
        end
+   end,
+})
+local FlySpeedSlider = MainTab:CreateSlider({
+   Name = "Fly speed",
+   Range = {0, 500},
+   Increment = 10,
+   Suffix = "speed",
+   CurrentValue = 10,
+   Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(FlySpeed)
+            
    end,
 })
