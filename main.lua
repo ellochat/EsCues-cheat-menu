@@ -44,7 +44,7 @@ local Window = RayfieldLib:CreateWindow({
 
 -- Create tab and section
 local MainTab = Window:CreateTab("Main Tab", 10511856020)
-local InfoSection = MainTab:CreateSection("Info!")
+local InfoSection = MainTab:CreateSection("i forgot what to put here")
 
 -- Notify execution
 RayfieldLib:Notify({
@@ -78,6 +78,7 @@ MainTab:CreateButton({
             player.Character.Humanoid.WalkSpeed = 16
         end
     end
+        WalkSpeedSlider:Set(16) -- The new slider integer value
 })
 
 -- Infinite Jump Toggle (with disconnect on toggle off)
@@ -188,4 +189,47 @@ local StopButton = TrollTab:CreateButton({
             sound:Stop()
         end
     end,
+})
+local JerkR15Button = TrollTab:CreateButton({
+   Name = "jerk it for r15",
+   Callback = function()
+   loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
+   end,
+})
+local JerkR6Button = TrollTab:CreateButton({
+   Name = "jerk it for r6",
+   Callback = function()
+   loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
+   end,
+})
+local killall = TrollTab:CreateButton({
+   Name = "Kill All",
+   Callback = function()
+local Players = game:GetService("Players")
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.Health = 0
+    end
+end
+
+   end,
+})
+local UserInput = TrollTab:CreateInput({
+   Name = "Username",
+   CurrentValue = "",
+   PlaceholderText = "Input Placeholder",
+   RemoveTextAfterFocusLost = false,
+   Flag = "Input1",
+   Callback = function(User)
+   -- The function that takes place when the input is changed
+   -- The variable (Text) is a string for the value in the text box
+   end,
+})
+local killSpecificButton = TrollTab:CreateButton({
+   Name = "Button Example",
+   Callback = function()
+   local person = game.workspace:FindFirstChild(User)
+            person.humanoid.Health = 0
+   end,
 })
