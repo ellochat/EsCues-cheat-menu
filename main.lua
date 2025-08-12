@@ -232,10 +232,13 @@ TrollTab:CreateButton({
         end
     end
 })
+-- (Keep all your previous code here above unchanged)
+
 local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
-local speed = FlySpeed
+
+local FlySpeed = 10 -- default fly speed
 
 local bv, bg
 
@@ -246,7 +249,7 @@ local function startFlying()
     bv = Instance.new("BodyVelocity")
     bv.Name = "FlyVelocity"
     bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-    bv.Velocity = Vector3.zero
+    bv.Velocity = Vector3.new(0, 0, 0)
     bv.Parent = root
 
     bg = Instance.new("BodyGyro")
@@ -261,14 +264,31 @@ local function startFlying()
         if not root or not bv or not bg then return end
 
         local moveDirection = Vector3.new()
-        if UIS:IsKeyDown(Enum.KeyCode.W) then moveDirection += workspace.CurrentCamera.CFrame.LookVector end
-        if UIS:IsKeyDown(Enum.KeyCode.S) then moveDirection -= workspace.CurrentCamera.CFrame.LookVector end
-        if UIS:IsKeyDown(Enum.KeyCode.A) then moveDirection -= workspace.CurrentCamera.CFrame.RightVector end
-        if UIS:IsKeyDown(Enum.KeyCode.D) then moveDirection += workspace.CurrentCamera.CFrame.RightVector end
-        if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDirection += Vector3.new(0,1,0) end
-        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then moveDirection -= Vector3.new(0,1,0) end
+        if UIS:IsKeyDown(Enum.KeyCode.W) then
+            moveDirection += workspace.CurrentCamera.CFrame.LookVector
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then
+            moveDirection -= workspace.CurrentCamera.CFrame.LookVector
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then
+            moveDirection -= workspace.CurrentCamera.CFrame.RightVector
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then
+            moveDirection += workspace.CurrentCamera.CFrame.RightVector
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.Space) then
+            moveDirection += Vector3.new(0, 1, 0)
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+            moveDirection -= Vector3.new(0, 1, 0)
+        end
 
-        bv.Velocity = moveDirection * speed
+        moveDirection = moveDirection.Unit
+        if moveDirection ~= moveDirection then -- NaN check when no input (unit of zero vector is NaN)
+            moveDirection = Vector3.new(0, 0, 0)
+        end
+
+        bv.Velocity = moveDirection * FlySpeed
         bg.CFrame = workspace.CurrentCamera.CFrame
     end)
 end
@@ -280,25 +300,26 @@ local function stopFlying()
 end
 
 local FlyToggle = MainTab:CreateToggle({
-   Name = "Fly",
-   CurrentValue = false,
-   Flag = "ToggleFly",
-   Callback = function(Value)
-       if Value then
-           startFlying()
-       else
-           stopFlying()
-       end
-   end,
+    Name = "Fly",
+    CurrentValue = false,
+    Flag = "ToggleFly",
+    Callback = function(Value)
+        if Value then
+            startFlying()
+        else
+            stopFlying()
+        end
+    end,
 })
+
 local FlySpeedSlider = MainTab:CreateSlider({
-   Name = "Fly speed",
-   Range = {0, 500},
-   Increment = 10,
-   Suffix = "speed",
-   CurrentValue = 10,
-   Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-   Callback = function(FlySpeed)
-            
-   end,
+    Name = "Fly speed",
+    Range = {0, 500},
+    Increment = 10,
+    Suffix = "speed",
+    CurrentValue = FlySpeed,
+    Flag = "Slider1",
+    Callback = function(Value)
+        FlySpeed = Value
+    end,
 })
