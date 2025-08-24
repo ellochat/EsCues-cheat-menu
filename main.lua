@@ -360,172 +360,36 @@ local function GetPlayerFromName(name)
 end
 
 local function SkidFling(TargetPlayer)
-    if not TargetPlayer or not TargetPlayer.Character then
-        SendNotification("Error", "Target player invalid.", 5)
-        return
-    end
-    local Character = player.Character
-    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-    local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+    if not TargetPlayer.Character or not TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
 
-    local TCharacter = TargetPlayer.Character
-    local THumanoid = TCharacter:FindFirstChildOfClass("Humanoid")
-    local TRootPart = TCharacter:FindFirstChild("HumanoidRootPart")
-    local THead = TCharacter:FindFirstChild("Head")
-    local Accessory = TCharacter:FindFirstChildOfClass("Accessory")
-    local Handle = Accessory and Accessory:FindFirstChild("Handle")
+    local HRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not HRP then return end
 
-    if Character and Humanoid and RootPart then
-        if RootPart.Velocity.Magnitude < 50 then
-            getgenv().OldPos = RootPart.CFrame
+    -- Save old position
+    local oldCFrame = HRP.CFrame
+
+    -- Create fling force
+    local BV = Instance.new("BodyVelocity")
+    BV.Velocity = Vector3.new(9e9, 9e9, 9e9)
+    BV.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+    BV.Parent = HRP
+
+    -- Teleport to target for fling
+    HRP.CFrame = TargetPlayer.Character.HumanoidRootPart.CFrame
+    task.wait(0.2)
+
+    -- Reset back to old position
+    HRP.CFrame = oldCFrame
+    BV:Destroy()
+
+    -- 🔹 NEW: cleanup forces so you don’t get flung too
+    for _, part in ipairs(player.Character:GetDescendants()) do
+        if part:IsA("BodyVelocity") or part:IsA("BodyGyro") or part:IsA("BodyThrust") or part:IsA("VectorForce") then
+            part:Destroy()
         end
-        if THumanoid and THumanoid.Sit and THumanoid.Sit == true then
-            return SendNotification("Error Occurred", "Targeting is sitting", 5)
-        end
-        if THead then
-            workspace.CurrentCamera.CameraSubject = THead
-        elseif not THead and Handle then
-            workspace.CurrentCamera.CameraSubject = Handle
-        elseif THumanoid and TRootPart then
-            workspace.CurrentCamera.CameraSubject = THumanoid
-        end
-        if not TCharacter:FindFirstChildWhichIsA("BasePart") then
-            return
-        end
-
-        local function FPos(BasePart, Pos, Ang)
-            RootPart.CFrame = CFrame.new(BasePart.Position) * Pos * Ang
-            Character:SetPrimaryPartCFrame(CFrame.new(BasePart.Position) * Pos * Ang)
-            RootPart.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
-            RootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
-        end
-
-        local function SFBasePart(BasePart)
-            local TimeToWait = 2
-            local Time = tick()
-            local Angle = 0
-
-            repeat
-                if RootPart and THumanoid then
-                    if BasePart.Velocity.Magnitude < 50 then
-                        Angle = Angle + 100
-
-                        FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle),0 ,0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(2.25, 1.5, -2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(-2.25, -1.5, 2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection,CFrame.Angles(math.rad(Angle), 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection,CFrame.Angles(math.rad(Angle), 0, 0))
-                        task.wait()
-                    else
-                        FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, -1.5, -THumanoid.WalkSpeed), CFrame.Angles(0, 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, -1.5, -TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(0, 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, -1.5 ,0), CFrame.Angles(math.rad(-90), 0, 0))
-                        task.wait()
-
-                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
-                        task.wait()
-                    end
-                else
-                    break
-                end
-            until BasePart.Velocity.Magnitude > 500 or BasePart.Parent ~= TargetPlayer.Character or TargetPlayer.Parent ~= game.Players or TargetPlayer.Character ~= TCharacter or THumanoid.Sit or Humanoid.Health <= 0 or tick() > Time + TimeToWait
-        end
-
-        workspace.FallenPartsDestroyHeight = 0/0
-
-        local BV = Instance.new("BodyVelocity")
-        BV.Name = "EpixVel"
-        BV.Parent = RootPart
-        BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
-        BV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-
-        Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-
-        if TRootPart and THead then
-            if (TRootPart.CFrame.p - THead.CFrame.p).Magnitude > 5 then
-                SFBasePart(THead)
-            else
-                SFBasePart(TRootPart)
-            end
-        elseif TRootPart and not THead then
-            SFBasePart(TRootPart)
-        else
-            SFBasePart(THead)
-        end
-
-        BV:Destroy()
-        workspace.CurrentCamera.CameraSubject = Humanoid
-        RootPart.CFrame = getgenv().OldPos
     end
 end
 
-TrollTab:CreateButton({
-    Name = "Fling",
-    Callback = function()
-        local target = targetUsername
-        if target == "" then
-            RayfieldLib:Notify({
-                Title = "Error",
-                Content = "Please enter a username.",
-                Duration = 5
-            })
-            return
-        end
-
-        local Players = game.Players
-        if target:lower() == "all" then
-            for _, plr in pairs(Players:GetPlayers()) do
-                if plr ~= player then
-                    SkidFling(plr)
-                    task.wait(0.5)
-                end
-            end
-        else
-            local targetPlayer = Players:FindFirstChild(target) or GetPlayerFromName(target)
-            if targetPlayer then
-                SkidFling(targetPlayer)
-            else
-                RayfieldLib:Notify({
-                    Title = "Error",
-                    Content = "Target player not found.",
-                    Duration = 5
-                })
-            end
-        end
-    end
 })
 
 -- Extra: Teleport to player button (optional)
