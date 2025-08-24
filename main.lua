@@ -1,157 +1,551 @@
--- Safely load Rayfield
-local success, RayfieldLibOrError = pcall(function()
+-- Safely load Rayfield only once
+local success, RayfieldLib = pcall(function()
     return loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 end)
 
-if not success or not RayfieldLibOrError then
-    warn("Failed to load Rayfield library:", RayfieldLibOrError)
+if not success or not RayfieldLib then
+    warn("Failed to load Rayfield library.")
     return
 end
 
-local RayfieldLib = RayfieldLibOrError
-
--- Create UI window
+-- Create UI window once
 local Window = RayfieldLib:CreateWindow({
     Name = "EsCue's Universal Cheat Menu",
-    LoadingTitle = "Loading...",
-    LoadingSubtitle = "by EsCue",
+    Icon = 0,
+    LoadingTitle = "Entering the cheat menu!",
+    LoadingSubtitle = "by @EscueGT on YouTube",
+    ShowText = "Rayfield",
+    Theme = "AmberGlow",
+    ToggleUIKeybind = "K",
+
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = "EsCueHub",
-        FileName = "Config"
+        FolderName = nil,
+        FileName = "Escue cheat menu"
     },
+
     Discord = {
-        Enabled = false,
-        Invite = "",
+        Enabled = true,
+        Invite = "JkUXvaYwvQ",
         RememberJoins = true
     },
+
     KeySystem = true,
     KeySettings = {
-        Title = "EsCue Hub",
-        Subtitle = "Key System",
-        Note = "Get key from pastebin",
+        Title = "EsCue's Key System",
+        Subtitle = "(it's ez)",
+        Note = "Join the Discord: https://discord.gg/JkUXvaYwvQ",
         FileName = "EsCueKey",
         SaveKey = true,
-        GrabKeyFromSite = true, -- if Rayfield supports grabbing from URL
-        Key = "https://pastebin.com/raw/skz86Q4h" -- change if required
+        GrabKeyFromSite = true,
+        Key = { "https://pastebin.com/raw/skz86Q4h" }
     }
 })
 
-local Tab = Window:CreateTab("Main", 4483362458)
+-- Create Main Tab
+local MainTab = Window:CreateTab("Main Tab", 10511856020)
+MainTab:CreateSection("Main Features")
 
---------------------------------------------------------
--- Fling Button
---------------------------------------------------------
-Tab:CreateButton({
-    Name = "Fling All",
-    Callback = function()
-        local function SkidFling(Target)
-            if not Target.Character or not Target.Character:FindFirstChild("HumanoidRootPart") then return end
+-- Notify execution
+RayfieldLib:Notify({
+    Title = "Executed!",
+    Content = "Script executed successfully!",
+    Duration = 5
+})
 
-            local Char = game.Players.LocalPlayer.Character
-            if not Char or not Char:FindFirstChild("HumanoidRootPart") then return end
-
-            -- Weld accessories for more mass
-            for _, Accessory in ipairs(Char:GetChildren()) do
-                if Accessory:IsA("Accessory") and Accessory:FindFirstChild("Handle") then
-                    Accessory.Handle.Massless = false
-                end
-            end
-
-            -- Fling loop
-            local BV = Instance.new("BodyVelocity")
-            BV.Velocity = Vector3.new(0, 0, 0)
-            BV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-            BV.Parent = Char.HumanoidRootPart
-
-            task.spawn(function()
-                while Target and Target.Parent do
-                    BV.Velocity = (Target.Character.HumanoidRootPart.Position - Char.HumanoidRootPart.Position).Unit * 100
-                    task.wait()
-                end
-                BV:Destroy()
-            end)
+-- WalkSpeed Slider
+local WalkSpeedSlider = MainTab:CreateSlider({
+    Name = "WalkSpeed",
+    Range = {0, 500},
+    Increment = 1,
+    Suffix = "walk 👍",
+    CurrentValue = 16,
+    Flag = "WalkSpeedSlider",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = Value
         end
+    end
+})
 
-        for _, Player in ipairs(game.Players:GetPlayers()) do
-            if Player ~= game.Players.LocalPlayer then
-                SkidFling(Player)
+-- Reset WalkSpeed Button
+MainTab:CreateButton({
+    Name = "Reset WalkSpeed",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = 16
+        end
+        WalkSpeedSlider:Set(16)
+    end
+})
+
+-- Infinite Jump Toggle
+local infJumpConnection = nil
+MainTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "InfJump",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+
+        if Value then
+            infJumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end)
+        else
+            if infJumpConnection then
+                infJumpConnection:Disconnect()
+                infJumpConnection = nil
             end
         end
     end
 })
 
---------------------------------------------------------
--- Fly Toggle
---------------------------------------------------------
-local flying = false
-local speed = 100
-local bodyGyro, bodyVel
+-- Invincibility Toggle
+local godmodeRunning = false
+MainTab:CreateToggle({
+    Name = "Invincibility",
+    CurrentValue = false,
+    Flag = "godmode",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
 
-local function startFly()
-    local Char = game.Players.LocalPlayer.Character
-    if not Char or not Char:FindFirstChild("HumanoidRootPart") then return end
+        if Value then
+            godmodeRunning = true
+            task.spawn(function()
+                while godmodeRunning do
+                    if player.Character and player.Character:FindFirstChild("Humanoid") then
+                        player.Character.Humanoid.Health = player.Character.Humanoid.MaxHealth
+                    end
+                    task.wait(0.5)
+                end
+            end)
+        else
+            godmodeRunning = false
+        end
+    end
+})
 
-    flying = true
-    local HRP = Char.HumanoidRootPart
+-- Fly Toggle and Fly Speed Slider in Main Tab
+local player = game.Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local RS = game:GetService("RunService")
 
-    bodyGyro = Instance.new("BodyGyro")
-    bodyGyro.P = 9e4
-    bodyGyro.Parent = HRP
+local FlySpeed = 10 -- default fly speed
+local bv, bg
 
-    bodyVel = Instance.new("BodyVelocity")
-    bodyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-    bodyVel.Velocity = Vector3.new()
-    bodyVel.Parent = HRP
+local function startFlying()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local root = character:WaitForChild("HumanoidRootPart")
 
-    game:GetService("RunService").RenderStepped:Connect(function()
-        if not flying then return end
+    bv = Instance.new("BodyVelocity")
+    bv.Name = "FlyVelocity"
+    bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+    bv.Velocity = Vector3.new(0, 0, 0)
+    bv.Parent = root
+
+    bg = Instance.new("BodyGyro")
+    bg.Name = "FlyGyro"
+    bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+    bg.CFrame = root.CFrame
+    bg.Parent = root
+
+    RS:BindToRenderStep("FlyMovement", Enum.RenderPriority.Character.Value, function()
+        if not player.Character then return end
+        local root = player.Character:FindFirstChild("HumanoidRootPart")
+        if not root or not bv or not bg then return end
+
         local moveDirection = Vector3.new()
-
-        local camera = workspace.CurrentCamera
-        if game.UserInputService:IsKeyDown(Enum.KeyCode.W) then
-            moveDirection += camera.CFrame.LookVector
+        if UIS:IsKeyDown(Enum.KeyCode.W) then
+            moveDirection += workspace.CurrentCamera.CFrame.LookVector
         end
-        if game.UserInputService:IsKeyDown(Enum.KeyCode.S) then
-            moveDirection -= camera.CFrame.LookVector
+        if UIS:IsKeyDown(Enum.KeyCode.S) then
+            moveDirection -= workspace.CurrentCamera.CFrame.LookVector
         end
-        if game.UserInputService:IsKeyDown(Enum.KeyCode.A) then
-            moveDirection -= camera.CFrame.RightVector
+        if UIS:IsKeyDown(Enum.KeyCode.A) then
+            moveDirection -= workspace.CurrentCamera.CFrame.RightVector
         end
-        if game.UserInputService:IsKeyDown(Enum.KeyCode.D) then
-            moveDirection += camera.CFrame.RightVector
+        if UIS:IsKeyDown(Enum.KeyCode.D) then
+            moveDirection += workspace.CurrentCamera.CFrame.RightVector
         end
-        if game.UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+        if UIS:IsKeyDown(Enum.KeyCode.Space) then
             moveDirection += Vector3.new(0, 1, 0)
         end
-        if game.UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
             moveDirection -= Vector3.new(0, 1, 0)
         end
 
         if moveDirection.Magnitude > 0 then
             moveDirection = moveDirection.Unit
+        else
+            moveDirection = Vector3.new(0, 0, 0)
         end
 
-        bodyVel.Velocity = moveDirection * speed
-        bodyGyro.CFrame = camera.CFrame
+        bv.Velocity = moveDirection * FlySpeed
+        bg.CFrame = workspace.CurrentCamera.CFrame
     end)
 end
 
-local function stopFly()
-    flying = false
-    if bodyGyro then bodyGyro:Destroy() end
-    if bodyVel then bodyVel:Destroy() end
+local function stopFlying()
+    RS:UnbindFromRenderStep("FlyMovement")
+    if bv then bv:Destroy() bv = nil end
+    if bg then bg:Destroy() bg = nil end
 end
 
-Tab:CreateToggle({
+local FlyToggle = MainTab:CreateToggle({
     Name = "Fly",
     CurrentValue = false,
-    Flag = "FlyToggle",
+    Flag = "ToggleFly",
     Callback = function(Value)
         if Value then
-            startFly()
+            startFlying()
         else
-            stopFly()
+            stopFlying()
+        end
+    end,
+})
+
+local FlySpeedSlider = MainTab:CreateSlider({
+    Name = "Fly speed",
+    Range = {0, 500},
+    Increment = 10,
+    Suffix = "speed",
+    CurrentValue = FlySpeed,
+    Flag = "Slider1",
+    Callback = function(Value)
+        FlySpeed = Value
+    end,
+})
+
+-- Troll Tab
+local TrollTab = Window:CreateTab("Trolls", nil)
+
+-- Shared sound variable
+local sound
+TrollTab:CreateInput({
+    Name = "Sound ID",
+    CurrentValue = "",
+    PlaceholderText = "Enter a Sound ID",
+    RemoveTextAfterFocusLost = false,
+    Flag = "SoundInput",
+    Callback = function(Text)
+        if sound then
+            sound:Destroy()
+        end
+        sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://" .. Text
+        sound.Volume = 5
+        sound.Parent = workspace
+    end
+})
+
+TrollTab:CreateButton({
+    Name = "Play Sound",
+    Callback = function()
+        if sound then
+            sound:Play()
+        else
+            RayfieldLib:Notify({
+                Title = "Error",
+                Content = "No sound loaded.",
+                Duration = 4
+            })
         end
     end
 })
+
+TrollTab:CreateButton({
+    Name = "Stop Sound",
+    Callback = function()
+        if sound and sound.IsPlaying then
+            sound:Stop()
+        end
+    end
+})
+
+-- Pre-made scripts
+TrollTab:CreateButton({
+    Name = "jerk it for r15",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
+    end
+})
+
+TrollTab:CreateButton({
+    Name = "jerk it for r6",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
+    end
+})
+
+-- Kill All button
+TrollTab:CreateButton({
+    Name = "Kill All",
+    Callback = function()
+        local Players = game:GetService("Players")
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                plr.Character.Humanoid.Health = 0
+            end
+        end
+    end
+})
+
+-- Kill specific player input and button
+local targetUsername = ""
+TrollTab:CreateInput({
+    Name = "Username (if fling then the user All makes everyone fling)",
+    CurrentValue = "",
+    PlaceholderText = "Enter a username",
+    RemoveTextAfterFocusLost = false,
+    Flag = "Input1",
+    Callback = function(User)
+        targetUsername = User
+    end
+})
+
+TrollTab:CreateButton({
+    Name = "Kill Player",
+    Callback = function()
+        local targetPlayer = game.Players:FindFirstChild(targetUsername)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+            targetPlayer.Character.Humanoid.Health = 0
+        else
+            RayfieldLib:Notify({
+                Title = "Error",
+                Content = "Player not found or no Humanoid.",
+                Duration = 4
+            })
+        end
+    end
+})
+
+-- Fling Button
+local function SendNotification(title, text, duration)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = duration,
+    })
+end
+
+local function GetPlayerFromName(name)
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    name = name:lower()
+
+    if name == "all" or name == "others" then
+        return "all"
+    elseif name == "random" then
+        local plrs = Players:GetPlayers()
+        for i, p in ipairs(plrs) do
+            if p == player then
+                table.remove(plrs, i)
+                break
+            end
+        end
+        return plrs[math.random(#plrs)]
+    else
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= player and (p.Name:lower():sub(1,#name) == name or p.DisplayName:lower():sub(1,#name) == name) then
+                return p
+            end
+        end
+    end
+    return nil
+end
+
+local function SkidFling(TargetPlayer)
+    if not TargetPlayer or not TargetPlayer.Character then
+        SendNotification("Error", "Target player invalid.", 5)
+        return
+    end
+    local Character = player.Character
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+    local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+
+    local TCharacter = TargetPlayer.Character
+    local THumanoid = TCharacter:FindFirstChildOfClass("Humanoid")
+    local TRootPart = TCharacter:FindFirstChild("HumanoidRootPart")
+    local THead = TCharacter:FindFirstChild("Head")
+    local Accessory = TCharacter:FindFirstChildOfClass("Accessory")
+    local Handle = Accessory and Accessory:FindFirstChild("Handle")
+
+    if Character and Humanoid and RootPart then
+        if RootPart.Velocity.Magnitude < 50 then
+            getgenv().OldPos = RootPart.CFrame
+        end
+        if THumanoid and THumanoid.Sit and THumanoid.Sit == true then
+            return SendNotification("Error Occurred", "Targeting is sitting", 5)
+        end
+        if THead then
+            workspace.CurrentCamera.CameraSubject = THead
+        elseif not THead and Handle then
+            workspace.CurrentCamera.CameraSubject = Handle
+        elseif THumanoid and TRootPart then
+            workspace.CurrentCamera.CameraSubject = THumanoid
+        end
+        if not TCharacter:FindFirstChildWhichIsA("BasePart") then
+            return
+        end
+
+        local function FPos(BasePart, Pos, Ang)
+            RootPart.CFrame = CFrame.new(BasePart.Position) * Pos * Ang
+            Character:SetPrimaryPartCFrame(CFrame.new(BasePart.Position) * Pos * Ang)
+            RootPart.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
+            RootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+        end
+
+        local function SFBasePart(BasePart)
+            local TimeToWait = 2
+            local Time = tick()
+            local Angle = 0
+
+            repeat
+                if RootPart and THumanoid then
+                    if BasePart.Velocity.Magnitude < 50 then
+                        Angle = Angle + 100
+
+                        FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle),0 ,0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(2.25, 1.5, -2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(-2.25, -1.5, 2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection,CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection,CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+                    else
+                        FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, -THumanoid.WalkSpeed), CFrame.Angles(0, 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, -TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(0, 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5 ,0), CFrame.Angles(math.rad(-90), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                        task.wait()
+                    end
+                else
+                    break
+                end
+            until BasePart.Velocity.Magnitude > 500 or BasePart.Parent ~= TargetPlayer.Character or TargetPlayer.Parent ~= game.Players or TargetPlayer.Character ~= TCharacter or THumanoid.Sit or Humanoid.Health <= 0 or tick() > Time + TimeToWait
+        end
+
+        workspace.FallenPartsDestroyHeight = 0/0
+
+        local BV = Instance.new("BodyVelocity")
+        BV.Name = "EpixVel"
+        BV.Parent = RootPart
+        BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
+        BV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+
+        Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+        if TRootPart and THead then
+            if (TRootPart.CFrame.p - THead.CFrame.p).Magnitude > 5 then
+                SFBasePart(THead)
+            else
+                SFBasePart(TRootPart)
+            end
+        elseif TRootPart and not THead then
+            SFBasePart(TRootPart)
+        else
+            SFBasePart(THead)
+        end
+
+        BV:Destroy()
+        workspace.CurrentCamera.CameraSubject = Humanoid
+        RootPart.CFrame = getgenv().OldPos
+    end
+end
+
+TrollTab:CreateButton({
+    Name = "Fling",
+    Callback = function()
+        local target = targetUsername
+        if target == "" then
+            RayfieldLib:Notify({
+                Title = "Error",
+                Content = "Please enter a username.",
+                Duration = 5
+            })
+            return
+        end
+
+        local Players = game.Players
+        if target:lower() == "all" then
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr ~= player then
+                    SkidFling(plr)
+                    task.wait(0.5)
+                end
+            end
+        else
+            local targetPlayer = Players:FindFirstChild(target) or GetPlayerFromName(target)
+            if targetPlayer then
+                SkidFling(targetPlayer)
+            else
+                RayfieldLib:Notify({
+                    Title = "Error",
+                    Content = "Target player not found.",
+                    Duration = 5
+                })
+            end
+        end
+    end
+})
+
+-- Extra: Teleport to player button (optional)
+TrollTab:CreateButton({
+    Name = "Teleport To Player",
+    Callback = function()
+        local targetPlayer = game.Players:FindFirstChild(targetUsername)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+            end
+        else
+            RayfieldLib:Notify({
+                Title = "Error",
+                Content = "Player not found or missing HumanoidRootPart.",
+                Duration = 4
+            })
+        end
+    end
+})
+
+-- That's it! Full script with fly, walk speed, toggles, trolls, kill, fling, etc.
