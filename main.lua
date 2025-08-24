@@ -382,7 +382,7 @@ local function SkidFling(TargetPlayer)
     HRP.CFrame = oldCFrame
     BV:Destroy()
 
-    -- 🔹 NEW: cleanup forces so you don’t get flung too
+    -- 🔹 Cleanup forces so you don’t get flung too
     for _, part in ipairs(player.Character:GetDescendants()) do
         if part:IsA("BodyVelocity") or part:IsA("BodyGyro") or part:IsA("BodyThrust") or part:IsA("VectorForce") then
             part:Destroy()
@@ -390,26 +390,42 @@ local function SkidFling(TargetPlayer)
     end
 end
 
-})
-
--- Extra: Teleport to player button (optional)
+-- Fling button setup
 TrollTab:CreateButton({
-    Name = "Teleport To Player",
+    Name = "Fling",
     Callback = function()
-        local targetPlayer = game.Players:FindFirstChild(targetUsername)
-        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if root then
-                root.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-            end
-        else
+        local target = targetUsername
+        if target == "" then
             RayfieldLib:Notify({
                 Title = "Error",
-                Content = "Player not found or missing HumanoidRootPart.",
-                Duration = 4
+                Content = "Please enter a username.",
+                Duration = 5
             })
+            return
+        end
+
+        local Players = game.Players
+        if target:lower() == "all" then
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr ~= player then
+                    SkidFling(plr)
+                    task.wait(0.5)
+                end
+            end
+        else
+            local targetPlayer = Players:FindFirstChild(target) or GetPlayerFromName(target)
+            if targetPlayer then
+                SkidFling(targetPlayer)
+            else
+                RayfieldLib:Notify({
+                    Title = "Error",
+                    Content = "Target player not found.",
+                    Duration = 5
+                })
+            end
         end
     end
 })
+
 
 -- That's it! Full script with fly, walk speed, toggles, trolls, kill, fling, etc.
